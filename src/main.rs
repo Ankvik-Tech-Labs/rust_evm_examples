@@ -52,7 +52,7 @@ async fn main() -> Result<()> {
     
     // Fetch pairs using multicall
     // 50 is batchsize and 200 is the number of pool we want to fetch
-    let pairs = fetch_pairs(provider.clone(), pair_address, 50, 100).await?;
+    let pairs = fetch_pairs(provider.clone(), pair_address, 50, num_pools).await?;
     println!("{} {:?}", "[*] Pair addresses:".green(), pairs);
 
     let duration = start_time.elapsed(); // Calculate elapsed time

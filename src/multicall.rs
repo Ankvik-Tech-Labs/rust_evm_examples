@@ -33,11 +33,11 @@ pub async fn fetch_pairs(
     let mut multicall = Multicall::new(provider.clone(), None).await?;
 
     // Store results
-    let pairs = Vec::new();
+    let mut pairs = Vec::new();
 
     // Fetch the number of pools
     let num_pools: u64 = uniswap_v2_factory.all_pairs_length().call().await?.as_u64();
-    let num_pools = num_pools.min(2 as u64);
+    let num_pools = num_pools.min(max_pools);
 
     // Fetch pairs in batches
     for i in (0..num_pools).step_by(batch_size) {
@@ -52,11 +52,11 @@ pub async fn fetch_pairs(
 
         
         // Execute multicall and get results
-        let results: (Address,)= multicall.call().await?;
+        let results: Vec<Address> = multicall.call_array().await?;
         println!("{:?}", results);
-        // for (pair,) in results {
-        //     pairs.push(pair);
-        // }
+        for pair in results {
+            pairs.push(pair);
+        }
         
         // Clear calls for the next batch
         multicall.clear_calls();
