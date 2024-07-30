@@ -14,7 +14,7 @@ use std::sync::Arc;
 abigen!(
     IUniswapV2Factory,
     r#"[
-    function allPairs(uint256 index) external view returns (address pair)
+    function allPairs(uint256 index) external view returns (address)
     function allPairsLength() external view returns (uint256)
     ]"#,
 );
@@ -33,32 +33,30 @@ pub async fn fetch_pairs(
     let mut multicall = Multicall::new(provider.clone(), None).await?;
 
     // Store results
-    let mut pairs = Vec::new();
+    let pairs = Vec::new();
 
     // Fetch the number of pools
     let num_pools: u64 = uniswap_v2_factory.all_pairs_length().call().await?.as_u64();
-    let num_pools = num_pools.min(max_pools);
+    let num_pools = num_pools.min(2 as u64);
 
     // Fetch pairs in batches
     for i in (0..num_pools).step_by(batch_size) {
-        let mut calls = Vec::new();
         let end_index = (i + batch_size as u64).min(num_pools);
+
+        // Add calls to multicall in the same loop
         for j in i..end_index {
             let index: U256 = U256::from(j);
             let call = uniswap_v2_factory.all_pairs(index);
-            calls.push(call);
-        }
-
-        // Add calls to multicall
-        for call in calls {
             multicall.add_call(call, false);
         }
 
+        
         // Execute multicall and get results
-        let results: Vec<(Address,)> = multicall.call().await?;
-        for (pair,) in results {
-            pairs.push(pair);
-        }
+        let results: (Address,)= multicall.call().await?;
+        println!("{:?}", results);
+        // for (pair,) in results {
+        //     pairs.push(pair);
+        // }
         
         // Clear calls for the next batch
         multicall.clear_calls();
