@@ -1,4 +1,4 @@
-# 🌐 Uniswap V2 Factory Pairs Fetcher
+# 🌐 Rust EVM Contracts Interactions
 
 A Rust application to fetch and display Uniswap V2 factory pair addresses using the ethers library and the Uniswap V2 Factory smart contract. The main objective of this repository is to showcase how rust can be used to interact with EVM based smart contracts.
 
