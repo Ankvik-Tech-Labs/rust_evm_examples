@@ -1,15 +1,14 @@
 // src/multicall.rs
 
 use ethers::{
-    prelude::{Provider, Http},
-    types::{Address, U256},
     prelude::abigen,
+    prelude::{Http, Provider},
+    types::{Address, U256},
 };
 use ethers_contract::Multicall;
 // use ethers_core::abi::Abi;
 use eyre::Result;
 use std::sync::Arc;
-
 
 abigen!(
     IUniswapV2Factory,
@@ -50,14 +49,13 @@ pub async fn fetch_pairs(
             multicall.add_call(call, false);
         }
 
-        
         // Execute multicall and get results
         let results: Vec<Address> = multicall.call_array().await?;
         println!("{:?}", results);
         for pair in results {
             pairs.push(pair);
         }
-        
+
         // Clear calls for the next batch
         multicall.clear_calls();
     }

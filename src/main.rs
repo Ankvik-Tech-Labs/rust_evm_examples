@@ -1,17 +1,16 @@
 mod multicall;
+use crate::multicall::fetch_pairs;
+use colored::*;
 use ethers::{
     prelude::abigen,
-    providers::{Provider},
+    providers::Provider,
     types::{Address, U256},
-    // solc::Solc,
 };
-use std::sync::Arc;
+use eyre::Result;
 use std::fs;
+use std::sync::Arc;
 use std::time::Instant;
 use toml::Value;
-use eyre::Result;
-use colored::*;
-use crate::multicall::fetch_pairs;
 
 abigen!(
     IUniswapV2Factory,
@@ -20,7 +19,6 @@ abigen!(
     function allPairsLength() external view returns (uint256)
     ]"#,
 );
-
 
 fn load_rpc_url(config_path: &str) -> Result<String> {
     let config_content = fs::read_to_string(config_path)?;
@@ -46,17 +44,24 @@ async fn main() -> Result<()> {
     let pair_address: Address = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f".parse()?;
     let uniswap_v2_factory = IUniswapV2Factory::new(pair_address, provider.clone());
 
-    
     let num_pools: U256 = uniswap_v2_factory.all_pairs_length().call().await?;
-    println!("{} {}", "[*] Number of pools:".truecolor(255, 0, 212), num_pools.to_string().cyan());
-    
+    println!(
+        "{} {}",
+        "[*] Number of pools:".truecolor(255, 0, 212),
+        num_pools.to_string().cyan()
+    );
+
     // Fetch pairs using multicall
-    // 50 is batchsize and 200 is the number of pool we want to fetch
-    let pairs = fetch_pairs(provider.clone(), pair_address, 50, num_pools as u64).await?;
+    // 100 is batch size and 200 is the number of pool we want to fetch
+    let pairs = fetch_pairs(provider.clone(), pair_address, 100, num_pools.as_u64()).await?;
     println!("{} {:?}", "[*] Pair addresses:".green(), pairs);
 
     let duration = start_time.elapsed(); // Calculate elapsed time
-    println!("{} {}", "[*] Time taken:".blue(),format!("{:?}", duration).green());
+    println!(
+        "{} {}",
+        "[*] Time taken:".blue(),
+        format!("{:?}", duration).green()
+    );
 
     Ok(())
 }
